@@ -17,7 +17,10 @@ var redisConn = builder.Configuration.GetConnectionString("Redis") ?? "redis:637
 builder.Services.AddSingleton<IConnectionMultiplexer>(ConnectionMultiplexer.Connect(redisConn));
 
 // 3. Kafka Producer Configuration
-var kafkaConfig = new ProducerConfig { BootstrapServers = builder.Configuration["Kafka:BootstrapServers"] ?? "kafka:9092" };
+var kafkaConfig = new ProducerConfig
+{
+    BootstrapServers = builder.Configuration["Kafka:BootstrapServers"] ?? "kafka:9092"
+};
 builder.Services.AddSingleton(kafkaConfig);
 builder.Services.AddSingleton<IProducer<Null, string>>(sp => 
     new ProducerBuilder<Null, string>(sp.GetRequiredService<ProducerConfig>()).Build());
@@ -45,7 +48,7 @@ builder.Services.AddHostedService<MatchResultConsumer>();
 var app = builder.Build();
 app.UseRateLimiter();
 
-// Endpoints
+// 6. Endpoints
 app.MapMatchEndpoints();
 
 app.Run();

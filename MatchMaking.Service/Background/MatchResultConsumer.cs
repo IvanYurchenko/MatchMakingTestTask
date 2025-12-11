@@ -1,5 +1,4 @@
 ﻿using Confluent.Kafka;
-using MatchMaking.Shared;
 using StackExchange.Redis;
 using System.Text.Json;
 using MatchMaking.Shared.Constants;

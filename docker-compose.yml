@@ -18,7 +18,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       # Listeners:
       # - PLAINTEXT: Used internally by Docker containers (Service/Worker) on port 9092
-      # - PLAINTEXT_HOST: Used by your host machine on port 29092
+      # - PLAINTEXT_HOST: Used by the host machine on port 29092
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
@@ -41,10 +41,10 @@ services:
       context: .
       dockerfile: MatchMaking.Service/Dockerfile
     ports:
-      - "5000:8080" # <--- CHANGED: Host port 5000 maps to container 8080 to avoid conflicts
+      - "5000:8080" # Host port 5000 maps to container 8080 to avoid conflicts
     depends_on:
       kafka:
-        condition: service_healthy # <--- Waits for Kafka to be fully ready
+        condition: service_healthy
       redis:
         condition: service_started
     environment:
@@ -59,7 +59,7 @@ services:
       replicas: 2
     depends_on:
       kafka:
-        condition: service_healthy # <--- Waits for Kafka to be fully ready
+        condition: service_healthy
       redis:
         condition: service_started
     environment:

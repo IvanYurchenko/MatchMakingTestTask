@@ -17,4 +17,10 @@
   <ItemGroup>
     <ProjectReference Include="..\MatchMaking.Shared\MatchMaking.Shared.csproj" />
   </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Scripts\**\*.*">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
 </Project>

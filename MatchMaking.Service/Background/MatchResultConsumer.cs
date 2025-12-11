@@ -2,6 +2,8 @@
 using MatchMaking.Shared;
 using StackExchange.Redis;
 using System.Text.Json;
+using MatchMaking.Shared.Constants;
+using MatchMaking.Shared.Models;
 
 namespace MatchMaking.Service.Background;
 
@@ -10,12 +12,14 @@ public class MatchResultConsumer(
     IConnectionMultiplexer redis, 
     ILogger<MatchResultConsumer> logger) : BackgroundService
 {
+    private static readonly TimeSpan MatchTtl = TimeSpan.FromMinutes(10);
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         var consumerConfig = new ConsumerConfig
         {
             BootstrapServers = config["Kafka:BootstrapServers"] ?? "kafka:9092",
-            GroupId = "matchmaking-service-group",
+            GroupId = KafkaConsumerGroups.ServiceGroup,
             AutoOffsetReset = AutoOffsetReset.Earliest
         };
 
@@ -40,11 +44,10 @@ public class MatchResultConsumer(
                     // Save match result for each user in Redis so they can poll it
                     foreach (var user in matchFound.UserIds)
                     {
-                        // Expiry: 10 minutes to keep Redis clean
                         await db.StringSetAsync(
-                            $"user:{user}:match", 
-                            consumeResult.Message.Value, 
-                            TimeSpan.FromMinutes(10));
+                            RedisKeys.GetUserMatchKey(user),
+                            consumeResult.Message.Value,
+                            MatchTtl);
                     }
                 }
             }

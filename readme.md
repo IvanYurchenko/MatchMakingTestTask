@@ -32,6 +32,8 @@ A distributed matchmaking system built with .NET 9, Kafka, and Redis. This solut
 docker-compose up --build
 ```
 
+You might need to wait for several minutes for everything to start properly.
+
 The .NET containers wait for Kafka to become healthy before starting. Look for `Worker started` logs.
 
 ### 2. Access the API
@@ -61,7 +63,8 @@ curl --location 'http://localhost:5000/match/status?userId=user_123'
 ```
 
 ## Simulation: Create a Full Match
-Queue 3 different players.
+Queue 3 different players. Please note that after queueing a third player, it might take some time before the match is created.
+
 
 ### Player A
 ```bash
@@ -97,6 +100,8 @@ Expected JSON:
   "userIds": ["Player_A", "Player_B", "Player_C"]
 }
 ```
+
+Please note that after queueing a third player, it might take some time before the match is created.
 
 ## Configuration
 Configuration controlled via `docker-compose.yml`.

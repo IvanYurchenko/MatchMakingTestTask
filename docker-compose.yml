@@ -1,0 +1,68 @@
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.1
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - 22181:2181
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.1
+    depends_on:
+      - zookeeper
+    ports:
+      - 29092:29092
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Listeners:
+      # - PLAINTEXT: Used internally by Docker containers (Service/Worker) on port 9092
+      # - PLAINTEXT_HOST: Used by the host machine on port 29092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    # This healthcheck ensures Kafka is ready before starting workers
+    healthcheck:
+      test: ["CMD", "kafka-broker-api-versions", "--bootstrap-server", "localhost:9092"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  redis:
+    image: redis:alpine
+    ports:
+      - 6379:6379
+
+  matchmaking.service:
+    build:
+      context: .
+      dockerfile: MatchMaking.Service/Dockerfile
+    ports:
+      - "5000:8080" # Host port 5000 maps to container 8080 to avoid conflicts
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - Kafka:BootstrapServers=kafka:9092
+      - ConnectionStrings:Redis=redis:6379
+
+  matchmaking.worker:
+    build:
+      context: .
+      dockerfile: MatchMaking.Worker/Dockerfile
+    deploy:
+      replicas: 2
+    depends_on:
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    environment:
+      - Kafka:BootstrapServers=kafka:9092
+      - ConnectionStrings:Redis=redis:6379
+      - MatchSettings:MatchSize=3

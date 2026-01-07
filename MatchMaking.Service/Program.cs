@@ -1,10 +1,8 @@
 using Confluent.Kafka;
 using MatchMaking.Service.Background;
 using MatchMaking.Service.Endpoints;
-using MatchMaking.Shared;
-using Microsoft.AspNetCore.Mvc;
+using MatchMaking.Service.Services;
 using StackExchange.Redis;
-using System.Text.Json;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +23,11 @@ builder.Services.AddSingleton(kafkaConfig);
 builder.Services.AddSingleton<IProducer<Null, string>>(sp => 
     new ProducerBuilder<Null, string>(sp.GetRequiredService<ProducerConfig>()).Build());
 
-// 4. Rate Limiter (Fixed window: 1 request per 100ms)
+// 4. Services
+builder.Services.AddSingleton<IMatchMessagingService, MatchMessagingService>();
+builder.Services.AddSingleton<IMatchStorageService, MatchStorageService>();
+
+// 5. Rate Limiter (Fixed window: 1 request per 100ms)
 builder.Services.AddRateLimiter(options =>
 {
     options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(context =>
